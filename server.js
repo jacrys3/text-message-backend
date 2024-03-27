@@ -1,7 +1,8 @@
 import dotenv from 'dotenv'
 import http from 'http'
 import { Server } from 'socket.io'
-import app from './app'
+import app from './app.js'
+
 dotenv.config()
 
 const server = http.createServer(app)
@@ -11,6 +12,8 @@ const io = new Server(server, {
   }
 })
 const port = process.env.PORT
+// a map in place of a database to store message history
+const msg_history = {}
 
 io.on('connection', (socket) => {
   console.log('A user connected')
@@ -18,6 +21,7 @@ io.on('connection', (socket) => {
   socket.on('join_room', (room) => {
     socket.join(room)
     console.log(`User has joined room ${room}`)
+    io.to(room).emit('receive_message_history', msg_history)
   })
 
   socket.on('leave_room', (room) => {
@@ -30,7 +34,13 @@ io.on('connection', (socket) => {
   })
 
   socket.on('send_message', ({ room, message }) => {
-    io.to(room).emit('receive_message', message)
+    // Add the message to the room's message history
+    if (!msg_history[room]) {
+      msg_history[room] = []
+    }
+    msg_history[room].push(message)
+
+    io.to(room).emit('receive_message_history', msg_history)
   })
 })
 
