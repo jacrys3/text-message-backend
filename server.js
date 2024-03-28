@@ -33,12 +33,12 @@ io.on('connection', (socket) => {
     console.log('User disconnected')
   })
 
-  socket.on('send_message', ({ room, message, username }) => {
+  socket.on('send_message', ({ room, message, username, time }) => {
     // Add the message to the room's message history
     if (!msg_history[room]) {
       msg_history[room] = []
     }
-    msg_history[room].push({message: message, username: username})
+    msg_history[room].push({message: message, username: username, time: time})
 
     io.to(room).emit('receive_message_history', msg_history)
   })
